@@ -24,12 +24,8 @@ def main():
             case "exit":
                 break
             case _:
-
                 print(error_msg)
 
-        
-
-        print(error_msg)
 
 
 if __name__ == "__main__":
