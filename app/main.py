@@ -11,7 +11,7 @@ def main():
         error_msg = f"{u_input}: command not found"
         print(error_msg)
 
-        if u_input == "exit":
+        if u_input == "exit 0":
             break
 
 if __name__ == "__main__":
