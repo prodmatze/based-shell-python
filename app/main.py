@@ -1,5 +1,7 @@
 import sys
 
+builtin_commands = ["echo", "exit", "type"]
+
 def parse_input(input):
     split_input = input.split(" ", 1)
     command = split_input[0]
@@ -25,8 +27,16 @@ def main():
         match command:
             case "echo":
                 print(param)
+
+            case "type":
+                if command in builtin_commands:
+                    print(f"{command} is a shell builtin")
+                else:
+                    print(error_msg)
+
             case "exit":
                 break
+
             case _:
                 print(error_msg)
 
