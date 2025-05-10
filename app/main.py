@@ -1,10 +1,11 @@
 import sys
 
-def parse_command(input):
+def parse_input(input):
     split_input = input.split(" ", 1)
     command = split_input[0]
+    param = split_input[1]
 
-    return command
+    return command, param
 
 def main():
     
@@ -13,12 +14,20 @@ def main():
         sys.stdout.write("$ ")
         #wait for user input
         u_input = input()
-        command = parse_command(u_input)
+        command, param = parse_input(u_input)
 
         error_msg = f"{u_input}: command not found"
 
-        if command == "exit":
-            break
+        match command:
+            case "echo":
+                print(param)
+            case "exit":
+                break
+            case _:
+
+                print(error_msg)
+
+        
 
         print(error_msg)
 
