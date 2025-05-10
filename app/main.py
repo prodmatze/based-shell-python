@@ -29,8 +29,8 @@ def main():
                 print(param)
 
             case "type":
-                if command in builtin_commands:
-                    print(f"{command} is a shell builtin")
+                if param in builtin_commands:
+                    print(f"{param} is a shell builtin")
                 else:
                     print(error_msg)
 
