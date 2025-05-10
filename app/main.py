@@ -22,7 +22,7 @@ def main():
         u_input = input()
         command, param = parse_input(u_input)
 
-        error_msg = f"{u_input}: command not found"
+        error_msg = f"{command}: command not found"
 
         match command:
             case "echo":
@@ -32,7 +32,7 @@ def main():
                 if param in builtin_commands:
                     print(f"{param} is a shell builtin")
                 else:
-                    print(error_msg)
+                    print(f"{param}: not found")
 
             case "exit":
                 break
