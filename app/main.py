@@ -1,3 +1,4 @@
+from os.path import isfile
 import sys
 import os
 
@@ -14,11 +15,16 @@ def parse_input(input):
 
     return command, param
 
-def main():
-
-
+def find_executable(cmd):
     paths = os.environ.get("PATH", "").split(":")
+    for path in paths:
+        candidate = os.path.join(path, cmd)
+        if os.path.isfile(candidate) and os.access(candidate, os.X_OK):
+            return candidate
 
+    return None
+
+def main():
     while True:
         sys.stdout.write("$ ")
 
@@ -32,7 +38,7 @@ def main():
             print("")
             continue
 
-        command, param = parse_input(u_input)
+        command, argument = parse_input(u_input)
         error_msg = f"{command}: command not found"
 
         #handle empty input -> continue to next iteration if user just presses enter with no input
@@ -41,22 +47,21 @@ def main():
 
         match command:
             case "echo":
-                print(param)
+                print(argument)
 
             case "type":
-                if paths:
-                    for path in paths:
-                        if os.path.isfile(path) and os.access(path, os.X_OK):
-                            print(f"{param} is {path}")
-                            continue
-                        else:
-                            print(f"{param}: not found")
-                            continue
+                if not argument:
+                    print(f"{command}: missing argument")
+                    continue
 
-                if param in builtin_commands:
-                    print(f"{param} is a shell builtin")
+                if argument in builtin_commands:
+                    print(f"{argument} is a shell builtin")
                 else:
-                    print(f"{param}: not found")
+                    result = find_executable(argument)
+                    if result:
+                        print(f"{argument} is {result}")
+                    else:
+                        print(f"{argument}: not found")
 
             case "exit":
                 break
