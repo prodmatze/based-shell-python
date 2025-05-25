@@ -46,6 +46,11 @@ def main():
         if command == "":
             continue
 
+        executable = find_executable(command)
+        if executable:
+            subprocess.call([executable, argument])
+            continue
+
         match command:
             case "echo":
                 print(argument)
@@ -61,7 +66,6 @@ def main():
                     result = find_executable(argument)
                     if result:
                         print(f"{argument} is {result}")
-                        subprocess.call([result, argument])
                     else:
                         print(f"{argument}: not found")
 
