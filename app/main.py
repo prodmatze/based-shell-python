@@ -48,7 +48,7 @@ def main():
 
         executable = find_executable(command)
         if executable:
-            subprocess.call([executable, argument])
+            subprocess.call([command, argument])
             continue
 
         match command:
