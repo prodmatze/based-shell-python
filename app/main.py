@@ -5,7 +5,6 @@ import subprocess
 import shlex
 
 builtin_commands = ["echo", "exit", "type", "pwd", "cd"]
-cwd = os.getcwd()
 
 def parse_input(user_input):
     tokens = shlex.split(user_input)
@@ -18,10 +17,10 @@ def parse_input(user_input):
 
     return cmd, args
 
-def find_executable(cmd):
+def find_executable(arg):
     paths = os.environ.get("PATH", "").split(":")
     for path in paths:
-        candidate = os.path.join(path, cmd)
+        candidate = os.path.join(path, arg)
         if os.path.isfile(candidate) and os.access(candidate, os.X_OK):
             return candidate
 
@@ -39,13 +38,12 @@ def handle_builtin(cmd, args):
             for arg in args:
                 if arg in builtin_commands:
                     print(f"{arg} is a shell builtin")
-                    break
-
-                executable = find_executable(arg)
-                if executable:
-                    print(f"{arg} is {executable}")
                 else:
-                    print(f"{arg}: not found")
+                    executable = find_executable(arg)
+                    if executable:
+                        print(f"{arg} is {executable}")
+                    else:
+                        print(f"{arg}: not found")
 
         case "pwd":
             print(os.getcwd())
@@ -55,7 +53,11 @@ def handle_builtin(cmd, args):
                 print("cd: missing argument")
             elif len(args) == 1:
                 if args[0] == "~":
-                    os.chdir(os.environ.get("HOME", ""))
+                    home = os.environ.get("HOME")
+                    if home:
+                        os.chdir(home)
+                    else:
+                        print("cd: HOME not set")
                 elif os.path.isdir(args[0]):
                     try:
                         os.chdir(args[0])
@@ -87,7 +89,7 @@ def main():
         error_msg = f"{cmd}: command not found"
 
         #handle empty input -> continue to next iteration if user just presses enter with no input
-        if cmd == "":
+        if cmd == "" or not cmd:
             continue
 
         if cmd in builtin_commands:
