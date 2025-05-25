@@ -3,7 +3,7 @@ import sys
 import os
 import subprocess
 
-builtin_commands = ["echo", "exit", "type", "pwd"]
+builtin_commands = ["echo", "exit", "type", "pwd", "cd"]
 
 current_working_directory = os.getcwd()
 
@@ -73,6 +73,10 @@ def main():
 
             case "pwd":
                 print(current_working_directory)
+
+            case "cd":
+                if os.path.isdir(argument):
+                    current_working_directory = argument
 
             case "exit":
                 break
