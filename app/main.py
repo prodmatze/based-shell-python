@@ -3,7 +3,7 @@ import sys
 import os
 import subprocess
 
-builtin_commands = ["echo", "exit", "type"]
+builtin_commands = ["echo", "exit", "type", "pwd"]
 
 current_working_directory = os.getcwd()
 
