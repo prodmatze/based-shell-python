@@ -54,7 +54,9 @@ def handle_builtin(cmd, args):
             if not args:
                 print("cd: missing argument")
             elif len(args) == 1:
-                if os.path.isdir(args[0]):
+                if args[0] == "~":
+                    os.chdir(os.environ.get("HOME", ""))
+                elif os.path.isdir(args[0]):
                     try:
                         os.chdir(args[0])
                     except Exception as e:
