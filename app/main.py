@@ -5,6 +5,8 @@ import subprocess
 
 builtin_commands = ["echo", "exit", "type"]
 
+current_working_directory = os.getcwd()
+
 def parse_input(input):
     split_input = input.split(" ", 1)
     command = split_input[0]
@@ -68,6 +70,9 @@ def main():
                         print(f"{argument} is {result}")
                     else:
                         print(f"{argument}: not found")
+
+            case "pwd":
+                print(current_working_directory)
 
             case "exit":
                 break
