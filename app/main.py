@@ -27,34 +27,38 @@ def find_executable(cmd):
 
     return None
 
-def handle_builtin(cmd, args, curr_dir):
+def handle_builtin(cmd, args):
     match cmd:
         case "echo":
             print(" ".join(args))
 
         case "type":
-            if not args[0]:
+            if not args:
                 print(f"{cmd}: missing argument")
-            for arg in args:
 
+            for arg in args:
                 if arg in builtin_commands:
-                    print(f"{args[0]} is a shell builtin")
+                    print(f"{arg} is a shell builtin")
                     break
 
                 executable = find_executable(arg)
                 if executable:
                     print(f"{arg} is {executable}")
-
                 else:
                     print(f"{arg}: not found")
 
         case "pwd":
-            print(curr_dir)
+            print(os.getcwd())
 
         case "cd":
-            if len(args) <= 1:
+            if not args:
+                print("cd: missing argument")
+            elif len(args) == 1:
                 if os.path.isdir(args[0]):
-                    curr_dir = args[0]
+                    try:
+                        os.chdir(args[0])
+                    except Exception as e:
+                        print(f"cd: {e}")
                 else:
                     print(f"cd: {args[0]}: No such file or directory")
             else:
@@ -63,11 +67,7 @@ def handle_builtin(cmd, args, curr_dir):
         case "exit":
             sys.exit(0)
         
-    return curr_dir
-
-
 def main():
-    cwd = os.getcwd()
     while True:
         sys.stdout.write("$ ")
 
@@ -89,7 +89,7 @@ def main():
             continue
 
         if cmd in builtin_commands:
-            cwd = handle_builtin(cmd, args, cwd)
+            handle_builtin(cmd, args)
         else:
             executable = find_executable(cmd)
             if executable:
