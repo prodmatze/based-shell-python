@@ -1,6 +1,7 @@
 from os.path import isfile
 import sys
 import os
+import subprocess
 
 builtin_commands = ["echo", "exit", "type"]
 
@@ -60,6 +61,7 @@ def main():
                     result = find_executable(argument)
                     if result:
                         print(f"{argument} is {result}")
+                        subprocess.call([result, argument])
                     else:
                         print(f"{argument}: not found")
 
