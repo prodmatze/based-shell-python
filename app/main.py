@@ -2,21 +2,21 @@ from os.path import isfile
 import sys
 import os
 import subprocess
+import shlex
 
 builtin_commands = ["echo", "exit", "type", "pwd", "cd"]
+cwd = os.getcwd()
 
-current_working_directory = os.getcwd()
+def parse_input(user_input):
+    tokens = shlex.split(user_input)
+    
+    if not tokens:
+        return None, []
 
-def parse_input(input):
-    split_input = input.split(" ", 1)
-    command = split_input[0]
+    cmd = tokens[0]
+    args = tokens[1:]
 
-    if len(split_input) > 1:
-        param = split_input[1] 
-    else:
-        param = None
-
-    return command, param
+    return cmd, args
 
 def find_executable(cmd):
     paths = os.environ.get("PATH", "").split(":")
@@ -27,13 +27,53 @@ def find_executable(cmd):
 
     return None
 
+def handle_builtin(cmd, args, curr_dir):
+    match cmd:
+        case "echo":
+            print(" ".join(args))
+
+        case "type":
+            if not args[0]:
+                print(f"{cmd}: missing argument")
+            for arg in args:
+
+                if arg in builtin_commands:
+                    print(f"{args[0]} is a shell builtin")
+                    break
+
+                executable = find_executable(arg)
+                if executable:
+                    print(f"{arg} is {executable}")
+
+                else:
+                    print(f"{arg}: not found")
+
+        case "pwd":
+            print(curr_dir)
+
+        case "cd":
+            if len(args) <= 1:
+                if os.path.isdir(args[0]):
+                    curr_dir = args[0]
+                else:
+                    print(f"cd: {args[0]}: No such file or directory")
+            else:
+                print(f"cd: {' '.join(args)}: Invalid path.")
+                
+        case "exit":
+            sys.exit(0)
+        
+    return curr_dir
+
+
 def main():
+    cwd = os.getcwd()
     while True:
         sys.stdout.write("$ ")
 
         #wait for user input
         try:
-            u_input = input().strip()           #strip to avoid errors with extra whitespaces (e.g " echo hello", "echo hello ")
+            user_input = input().strip()           #strip to avoid errors with extra whitespaces (e.g " echo hello", "echo hello ")
         except EOFError:                        #CTRL-D (exit shell)
             print("BYE BYE")
             break
@@ -41,47 +81,20 @@ def main():
             print("")
             continue
 
-        command, argument = parse_input(u_input)
-        error_msg = f"{command}: command not found"
+        cmd, args = parse_input(user_input)
+        error_msg = f"{cmd}: command not found"
 
         #handle empty input -> continue to next iteration if user just presses enter with no input
-        if command == "":
+        if cmd == "":
             continue
 
-        executable = find_executable(command)
-        if executable:
-            subprocess.call([command, argument])
-            continue
-
-        match command:
-            case "echo":
-                print(argument)
-
-            case "type":
-                if not argument:
-                    print(f"{command}: missing argument")
-                    continue
-
-                if argument in builtin_commands:
-                    print(f"{argument} is a shell builtin")
-                else:
-                    result = find_executable(argument)
-                    if result:
-                        print(f"{argument} is {result}")
-                    else:
-                        print(f"{argument}: not found")
-
-            case "pwd":
-                print(current_working_directory)
-
-            case "cd":
-                if os.path.isdir(argument):
-                    current_working_directory = argument
-
-            case "exit":
-                break
-
-            case _:
+        if cmd in builtin_commands:
+            cwd = handle_builtin(cmd, args, cwd)
+        else:
+            executable = find_executable(cmd)
+            if executable:
+                subprocess.call([cmd] + args)
+            else:
                 print(error_msg)
 
 
