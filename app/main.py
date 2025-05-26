@@ -107,7 +107,7 @@ def handle_builtin(parsed_input):
         with open(file, "w") as f:
             f.write(output + "\n")
     else:
-        print(output if output else "", flush=True)
+        print(output if output else "")
         
 def handle_external(parsed_input):
     cmd = parsed_input["cmd"]
@@ -130,12 +130,10 @@ def handle_external(parsed_input):
         
 def main():
     while True:
-        sys.stdout.write("$ ")
-        sys.stdout.flush()
 
         #wait for user input
         try:
-            user_input = input().strip()           #strip to avoid errors with extra whitespaces (e.g " echo hello", "echo hello ")
+            user_input = input("$ ").strip()           #strip to avoid errors with extra whitespaces (e.g " echo hello", "echo hello ")
         except EOFError:                        #CTRL-D (exit shell)
             print("BYE BYE")
             break
@@ -166,6 +164,8 @@ def main():
             else:
                 print(error_msg)
 
+        sys.stdout.write("$ ")
+        sys.stdout.flush()
 
 if __name__ == "__main__":
     main()
