@@ -107,7 +107,7 @@ def handle_builtin(parsed_input):
         with open(file, "w") as f:
             f.write(output + "\n")
     else:
-        print()
+        print(output)
         
 def handle_external(parsed_input):
     cmd = parsed_input["cmd"]
