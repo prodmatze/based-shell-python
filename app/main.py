@@ -87,12 +87,13 @@ def handle_builtin(parsed_input):
                     home = os.environ.get("HOME")
                     if home:
                         os.chdir(home)
+                        output = "[CD: CHANGED TO HOME]"
                     else:
                         output = "cd: HOME not set"
                 elif os.path.isdir(args[0]):
                     try:
                         os.chdir(args[0])
-                        output = ""
+                        output = f"[CD: CHANGED TO {args[0]}]"
                     except Exception as e:
                         output = f"cd: {e}"
                 else:
