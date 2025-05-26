@@ -127,41 +127,38 @@ def handle_external(parsed_input):
     except FileNotFoundError:
         print(f"{cmd}: command not found")
 
+def prompt():
+    sys.stdout.write("$ ")
+    sys.stdout.flush()
         
 def main():
-    print("$ ", end="", flush=True)
     while True:
+        prompt()
 
         #wait for user input
+        # try:
+        #     user_input = input().strip()           #strip to avoid errors with extra whitespaces (e.g " echo hello", "echo hello ")
+        # except EOFError:                        #CTRL-D (exit shell)
+        #     print("BYE BYE")
+        #     break
+        # except KeyboardInterrupt:               #CTRL-C 
+        #     print("")
+        #     continue
         try:
-            user_input = input().strip()           #strip to avoid errors with extra whitespaces (e.g " echo hello", "echo hello ")
-        except EOFError:                        #CTRL-D (exit shell)
-            print("BYE BYE")
+            user_input = sys.stdin.readline()
+        except EOFError:
             break
-        except KeyboardInterrupt:               #CTRL-C 
-            print("")
+        except KeyboardInterrupt:
+            print()
             continue
-
-        if not user_input:
-            print("$ ", end="", flush=True)
-            continue
-
         parsed_input = parse_input(user_input)
-
-
         cmd = parsed_input.get("cmd", None)
-
-        if not cmd:
-            print("$ ", end="", flush=True)
-            continue
 
         error_msg = f"{cmd}: command not found"
 
         #handle empty input -> continue to next iteration if user just presses enter with no input
         if cmd == "" or not cmd:
             continue
-
-
 
         if cmd in builtin_commands:
             handle_builtin(parsed_input)
@@ -171,8 +168,6 @@ def main():
                 handle_external(parsed_input)
             else:
                 print(error_msg)
-
-        print("$ ", end="", flush=True)
 
 if __name__ == "__main__":
     main()
