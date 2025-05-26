@@ -129,9 +129,8 @@ def handle_external(parsed_input):
 
         
 def main():
+    print("$ ", end="", flush=True)
     while True:
-
-        print("$ ", end="", flush=True)
 
         #wait for user input
         try:
@@ -143,7 +142,9 @@ def main():
             print("")
             continue
 
+
         parsed_input = parse_input(user_input)
+
 
         cmd = parsed_input.get("cmd", None)
         args = parsed_input.get("args", None)
@@ -157,6 +158,8 @@ def main():
         if cmd == "" or not cmd:
             continue
 
+
+
         if cmd in builtin_commands:
             handle_builtin(parsed_input)
         else:
@@ -165,6 +168,8 @@ def main():
                 handle_external(parsed_input)
             else:
                 print(error_msg)
+
+        print("$ ", end="", flush=True)
 
 if __name__ == "__main__":
     main()
