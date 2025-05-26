@@ -92,6 +92,7 @@ def handle_builtin(parsed_input):
                 elif os.path.isdir(args[0]):
                     try:
                         os.chdir(args[0])
+                        output = "\n"
                     except Exception as e:
                         output = f"cd: {e}"
                 else:
@@ -105,9 +106,7 @@ def handle_builtin(parsed_input):
     if redirect and file:
         with open(file, "w") as f:
             f.write(output + "\n")
-    elif output:
-        print(output)
-    else: 
+    else:
         print()
         
 def handle_external(parsed_input):
