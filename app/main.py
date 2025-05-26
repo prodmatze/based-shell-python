@@ -142,15 +142,18 @@ def main():
             print("")
             continue
 
+        if not user_input:
+            print("$ ", end="", flush=True)
+            continue
 
         parsed_input = parse_input(user_input)
 
 
         cmd = parsed_input.get("cmd", None)
-        args = parsed_input.get("args", None)
-        redirect = parsed_input.get("redirect", False)
-        operator = parsed_input.get("operator", None)
-        file = parsed_input.get("file", None)
+
+        if not cmd:
+            print("$ ", end="", flush=True)
+            continue
 
         error_msg = f"{cmd}: command not found"
 
