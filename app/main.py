@@ -92,7 +92,7 @@ def handle_builtin(parsed_input):
                 elif os.path.isdir(args[0]):
                     try:
                         os.chdir(args[0])
-                        output = "\n"
+                        output = "fuck"
                     except Exception as e:
                         output = f"cd: {e}"
                 else:
