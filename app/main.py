@@ -106,7 +106,7 @@ def handle_builtin(parsed_input):
     if redirect and file:
         with open(file, "w") as f:
             f.write(output + "\n")
-    if output:
+    elif output:
         print(output)
     else:
         print()
