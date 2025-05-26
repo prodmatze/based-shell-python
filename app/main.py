@@ -129,7 +129,8 @@ def handle_external(parsed_input):
         
 def main():
     while True:
-        print("$ ", end="", flush=True)
+        sys.stdout.write("$ ")
+        sys.stdout.flush()
 
         #wait for user input
         try:
