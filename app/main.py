@@ -22,13 +22,12 @@ def parse_input(user_input):
         "file": None
     }
 
-    if ">" or "1>" in tokens:
+    if any(op in tokens for op in [">", "1>"]):
         if ">" in tokens:
             index = tokens.index(">")
-            result["operator"] = ">"
         else:
             index = tokens.index("1>")
-            result["operator"] = "1>"
+        result["operator"] = ">"
 
         result["args"] = tokens[1:index]
         result["file"] = tokens[index+1] if len(tokens) > index + 1 else None
@@ -37,36 +36,6 @@ def parse_input(user_input):
         result["args"] = tokens[1:]
 
     return result
-
-def check_operators(args):
-    hit_operator = False
-    pre_args = []
-    post_args = []
-    operator = None
-
-    for arg in args:
-        if hit_operator == False:
-            if arg in builtin_operators:
-                operator = arg
-                hit_operator = True
-            pre_args.append(arg)
-        else:
-            post_args.append(arg)
-
-    return pre_args, post_args, operator
-
-def handle_operator(args):
-    active_operator = None
-
-    for operator in builtin_operators:
-        if operator in args:
-            active_operator = operator 
-        else:
-            return [], [], None
-
-    split_args = args.split(active_operator)
-
-    return split_args[0], split_args[1], active_operator
 
 def find_executable(arg):
     paths = os.environ.get("PATH", "").split(":")
@@ -89,18 +58,20 @@ def handle_builtin(parsed_input):
             output = " ".join(args)
 
         case "type":
+            output_lines = []
             if not args:
                 output = f"{cmd}: missing argument"
 
             for arg in args:
                 if arg in builtin_commands:
-                    output = f"{arg} is a shell builtin"
+                    output_lines.append(f"{arg} is a shell builtin")
                 else:
                     executable = find_executable(arg)
                     if executable:
-                        output = f"{arg} is {executable}"
+                        output_lines.append(f"{arg} is {executable}")
                     else:
-                        output = f"{arg}: not found"
+                        output_lines.append(f"{arg}: not found")
+                output = "\n".join(output_lines)
 
         case "pwd":
             output = os.getcwd()
@@ -129,8 +100,11 @@ def handle_builtin(parsed_input):
             sys.exit(0)
 
     if redirect and file:
-        with open(file, "w") as f:
-            f.write(output + "\n")
+        if not file:
+            print(f"Rediretion operator used, but no file specified")
+        else:
+            with open(file, "w") as f:
+                f.write(output + "\n")
     else:
         print(output)
         
@@ -141,9 +115,12 @@ def handle_external(parsed_input):
     file = parsed_input["file"]
 
     try:
-        if redirect and file:
-            with open(file, "w") as f:
-                subprocess.run([cmd] + args, stdout=f)
+        if redirect:
+            if not file:
+                print(f"Rediretion operator used, but no file specified")
+            else:
+                with open(file, "w") as f:
+                    subprocess.run([cmd] + args, stdout=f)
         else:
             subprocess.run([cmd] + args)
     except FileNotFoundError:
