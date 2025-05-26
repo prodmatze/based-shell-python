@@ -87,13 +87,12 @@ def handle_builtin(parsed_input):
                     home = os.environ.get("HOME")
                     if home:
                         os.chdir(home)
-                        output = "[CD: CHANGED TO HOME]"
                     else:
                         output = "cd: HOME not set"
                 elif os.path.isdir(args[0]):
                     try:
                         os.chdir(args[0])
-                        output = f"[CD: CHANGED TO {args[0]}]"
+                        output = ""
                     except Exception as e:
                         output = f"cd: {e}"
                 else:
@@ -107,8 +106,10 @@ def handle_builtin(parsed_input):
     if redirect and file:
         with open(file, "w") as f:
             f.write(output + "\n")
-    else:
+    if output:
         print(output)
+    else:
+        print()
         
 def handle_external(parsed_input):
     cmd = parsed_input["cmd"]
