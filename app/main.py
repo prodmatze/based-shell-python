@@ -28,10 +28,13 @@ def parse_input(user_input):
         else:
             index = tokens.index("1>")
         result["operator"] = ">"
+        result["redirect"] = True
 
         result["args"] = tokens[1:index]
-        result["file"] = tokens[index+1] if len(tokens) > index + 1 else None
-        result["redirect"] = True
+        if index + 1 >= len(tokens):
+            print("Syntax error, no file provided for redirection")
+        else:
+            result["file"] = tokens[index+1]
     else:
         result["args"] = tokens[1:]
 
@@ -71,7 +74,7 @@ def handle_builtin(parsed_input):
                         output_lines.append(f"{arg} is {executable}")
                     else:
                         output_lines.append(f"{arg}: not found")
-                output = "\n".join(output_lines)
+            output = "\n".join(output_lines)
 
         case "pwd":
             output = os.getcwd()
@@ -100,11 +103,8 @@ def handle_builtin(parsed_input):
             sys.exit(0)
 
     if redirect and file:
-        if not file:
-            print(f"Rediretion operator used, but no file specified")
-        else:
-            with open(file, "w") as f:
-                f.write(output + "\n")
+        with open(file, "w") as f:
+            f.write(output + "\n")
     else:
         print(output)
         
@@ -117,7 +117,7 @@ def handle_external(parsed_input):
     try:
         if redirect:
             if not file:
-                print(f"Rediretion operator used, but no file specified")
+                print(f"Redirection operator used, but no file specified")
             else:
                 with open(file, "w") as f:
                     subprocess.run([cmd] + args, stdout=f)
