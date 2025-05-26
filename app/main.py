@@ -106,8 +106,8 @@ def handle_builtin(parsed_input):
     if redirect and file:
         with open(file, "w") as f:
             f.write(output + "\n")
-    else:
-        print(output if output else "")
+    elif output:
+        print(output)
         
 def handle_external(parsed_input):
     cmd = parsed_input["cmd"]
@@ -133,25 +133,21 @@ def prompt():
         
 def main():
     while True:
-        prompt()
+        print("$ ", end="", flush=True)
 
         #wait for user input
-        # try:
-        #     user_input = input().strip()           #strip to avoid errors with extra whitespaces (e.g " echo hello", "echo hello ")
-        # except EOFError:                        #CTRL-D (exit shell)
-        #     print("BYE BYE")
-        #     break
-        # except KeyboardInterrupt:               #CTRL-C 
-        #     print("")
-        #     continue
         try:
-            user_input = sys.stdin.readline()
-        except EOFError:
+            user_input = input().strip()           #strip to avoid errors with extra whitespaces (e.g " echo hello", "echo hello ")
+        except EOFError:                        #CTRL-D (exit shell)
+            print("BYE BYE")
             break
-        except KeyboardInterrupt:
-            print()
+        except KeyboardInterrupt:               #CTRL-C 
+            print("")
             continue
+
         parsed_input = parse_input(user_input)
+
+
         cmd = parsed_input.get("cmd", None)
 
         error_msg = f"{cmd}: command not found"
@@ -168,6 +164,7 @@ def main():
                 handle_external(parsed_input)
             else:
                 print(error_msg)
+
 
 if __name__ == "__main__":
     main()
