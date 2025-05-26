@@ -131,9 +131,11 @@ def handle_external(parsed_input):
 def main():
     while True:
 
+        print("$ ", end="", flush=True)
+
         #wait for user input
         try:
-            user_input = input("$ ").strip()           #strip to avoid errors with extra whitespaces (e.g " echo hello", "echo hello ")
+            user_input = input().strip()           #strip to avoid errors with extra whitespaces (e.g " echo hello", "echo hello ")
         except EOFError:                        #CTRL-D (exit shell)
             print("BYE BYE")
             break
