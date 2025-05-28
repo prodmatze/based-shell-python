@@ -139,9 +139,12 @@ def handle_redirect(output, file, operator):
             with open(file, "w") as f:
                 f.write(output[1] + "\n")
         case "2>":
-            if output[0] == STD_ERR:
                 with open(file, "w") as f:
-                    f.write(output + "\n")
+                    if output[0] == STD_ERR:
+                        f.write(output + "\n")
+                    else:
+                        f.write("\n")
+
 
     return None
 
