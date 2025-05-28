@@ -1,3 +1,4 @@
+from _typeshed import OpenBinaryModeUpdating
 from os.path import isfile
 import sys
 import os
@@ -130,6 +131,8 @@ def handle_builtin(parsed_input):
         # with open(file, "w") as f:
         #     f.write(output + "\n")
         handle_redirect(output, file, operator)
+        if output[0] == STD_OUT and operator == "2>":
+            print(output[1])
     elif output:
         print(output[1])
 
