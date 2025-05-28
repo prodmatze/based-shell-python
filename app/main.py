@@ -1,4 +1,3 @@
-from _typeshed import OpenBinaryModeUpdating
 from os.path import isfile
 import sys
 import os
