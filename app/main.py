@@ -10,13 +10,11 @@ builtin_operators = {
     "stderr_ops": ["2>"]
 }
 
-
 def parse_input(user_input):
     tokens = shlex.split(user_input)
     
     if not tokens:
         return {}
-
 
     result = {
         "cmd": tokens[0], 
@@ -129,12 +127,10 @@ def handle_builtin(parsed_input):
         print(output)
 
 def handle_redirect(output, file, operator):
-
     match operator:
         case "1>":
             with open(file, "w") as f:
                 f.write(output + "\n")
-
         case "2>":
             with open(file, "w") as f:
                 f.write(output + "\n")
@@ -154,7 +150,7 @@ def handle_external(parsed_input):
                 print(f"Redirection operator used, but no file specified")
             else:
                 with open(file, "w") as f:
-                    subprocess.run([cmd] + args, stdout=f)
+                    subprocess.run([cmd] + args, stdout=f, stderr=f)
         else:
             subprocess.run([cmd] + args)
     except FileNotFoundError:
