@@ -143,7 +143,7 @@ def handle_redirect(output, file, operator):
                     if output[0] == STD_ERR:
                         f.write(output + "\n")
                     else:
-                        f.write("\n")
+                        f.write("")
 
 
     return None
