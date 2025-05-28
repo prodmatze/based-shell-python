@@ -5,7 +5,11 @@ import subprocess
 import shlex
 
 builtin_commands = ["echo", "exit", "type", "pwd", "cd"]
-builtin_operators = [">", "1>", "<"]
+builtin_operators = {
+    "stdout_ops": [">", "1>"],
+    "stderr_ops": ["2>"]
+}
+
 
 def parse_input(user_input):
     tokens = shlex.split(user_input)
@@ -22,12 +26,12 @@ def parse_input(user_input):
         "file": None
     }
 
-    if any(op in tokens for op in [">", "1>"]):
+    if any(op in tokens for op in builtin_operators["stdout_ops"]):
         if ">" in tokens:
             index = tokens.index(">")
         else:
             index = tokens.index("1>")
-        result["operator"] = ">"
+        result["operator"] = "1>"
         result["redirect"] = True
 
         result["args"] = tokens[1:index]
@@ -35,6 +39,19 @@ def parse_input(user_input):
             print("Syntax error, no file provided for redirection")
         else:
             result["file"] = tokens[index+1]
+
+    elif any(op in tokens for op in builtin_operators["stderr_ops"]):
+        if "2>" in tokens:
+            index = tokens.index("2>")
+        result["operator"] = "2>"
+        result["redirect"] = True
+
+        result["args"] = tokens[1:index]
+        if index + 1 >= len(tokens):
+            print("Syntax error, no file provided for redirection")
+        else:
+            result["file"] = tokens[index+1]
+
     else:
         result["args"] = tokens[1:]
 
@@ -54,6 +71,7 @@ def handle_builtin(parsed_input):
     args = parsed_input["args"]
     redirect = parsed_input["redirect"]
     file = parsed_input["file"]
+    operator = parsed_input.get("operator", None)
     output = ""
 
     match cmd:
@@ -104,10 +122,25 @@ def handle_builtin(parsed_input):
             sys.exit(0)
 
     if redirect and file:
-        with open(file, "w") as f:
-            f.write(output + "\n")
+        # with open(file, "w") as f:
+        #     f.write(output + "\n")
+        handle_redirect(output, file, operator)
     elif output:
         print(output)
+
+def handle_redirect(output, file, operator):
+
+    match operator:
+        case "1>":
+            with open(file, "w") as f:
+                f.write(output + "\n")
+
+        case "2>":
+            with open(file, "w") as f:
+                f.write(output + "\n")
+
+    return None
+
         
 def handle_external(parsed_input):
     cmd = parsed_input["cmd"]
@@ -126,10 +159,6 @@ def handle_external(parsed_input):
             subprocess.run([cmd] + args)
     except FileNotFoundError:
         print(f"{cmd}: command not found")
-
-def prompt():
-    sys.stdout.write("$ ")
-    sys.stdout.flush()
         
 def main():
     while True:
