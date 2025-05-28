@@ -3,12 +3,17 @@ import sys
 import os
 import subprocess
 import shlex
+from itertools import chain
 
 builtin_commands = ["echo", "exit", "type", "pwd", "cd"]
 builtin_operators = {
     "stdout_ops": [">", "1>"],
     "stderr_ops": ["2>"]
 }
+
+STD_OUT = "std_out"
+STD_ERR = "std_err"
+STD_INFO = "std_info"
 
 def parse_input(user_input):
     tokens = shlex.split(user_input)
@@ -70,51 +75,53 @@ def handle_builtin(parsed_input):
     redirect = parsed_input["redirect"]
     file = parsed_input["file"]
     operator = parsed_input.get("operator", None)
-    output = ""
+    output = []
 
     match cmd:
         case "echo":
-            output = " ".join(args)
+            output = STD_OUT, " ".join(args)
 
         case "type":
-            output_lines = []
+            out_lines = []
+            err_lines = []
+
             if not args:
-                output = f"{cmd}: missing argument"
+                output = STD_ERR, f"{cmd}: missing argument"
 
             for arg in args:
                 if arg in builtin_commands:
-                    output_lines.append(f"{arg} is a shell builtin")
+                    out_lines.append((STD_OUT, f"{arg} is a shell builtin"))
                 else:
                     executable = find_executable(arg)
                     if executable:
-                        output_lines.append(f"{arg} is {executable}")
+                        out_lines.append((STD_OUT, f"{arg} is {executable}"))
                     else:
-                        output_lines.append(f"{arg}: not found")
-            output = "\n".join(output_lines)
+                        out_lines.append((STD_ERR, f"{arg}: not found"))
+            output = list(chain(out_lines)) #maybe use *out_lines, dunno
 
         case "pwd":
-            output = os.getcwd()
+            output = STD_OUT, os.getcwd()
 
         case "cd":
             if not args:
-                output = "cd: missing argument"
+                output = STD_ERR, "cd: missing argument"
             elif len(args) == 1:
                 if args[0] == "~":
                     home = os.environ.get("HOME")
                     if home:
                         os.chdir(home)
                     else:
-                        output = "cd: HOME not set"
+                        output = STD_INFO, "cd: HOME not set"
                 elif os.path.isdir(args[0]):
                     try:
                         os.chdir(args[0])
                         output = ""
                     except Exception as e:
-                        output = f"cd: {e}"
+                        output = STD_ERR, f"cd: {e}"
                 else:
-                    output = f"cd: {args[0]}: No such file or directory"
+                    output = STD_ERR, f"cd: {args[0]}: No such file or directory"
             else:
-                output = f"cd: {' '.join(args)}: Invalid path."
+                output = STD_ERR, f"cd: {' '.join(args)}: Invalid path."
                 
         case "exit":
             sys.exit(0)
@@ -124,16 +131,17 @@ def handle_builtin(parsed_input):
         #     f.write(output + "\n")
         handle_redirect(output, file, operator)
     elif output:
-        print(output)
+        print(output[1])
 
 def handle_redirect(output, file, operator):
     match operator:
         case "1>":
             with open(file, "w") as f:
-                f.write(output + "\n")
+                f.write(output[1] + "\n")
         case "2>":
-            with open(file, "w") as f:
-                f.write(output + "\n")
+            if output[0] == STD_ERR:
+                with open(file, "w") as f:
+                    f.write(output + "\n")
 
     return None
 
