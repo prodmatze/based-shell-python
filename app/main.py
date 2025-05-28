@@ -143,14 +143,19 @@ def handle_external(parsed_input):
     args = parsed_input["args"]
     redirect = parsed_input["redirect"]
     file = parsed_input["file"]
+    operator = parsed_input.get("operator", None)
 
     try:
         if redirect:
             if not file:
                 print(f"Redirection operator used, but no file specified")
-            else:
+            elif operator == "1>":
                 with open(file, "w") as f:
-                    subprocess.run([cmd] + args, stdout=f, stderr=f)
+                    subprocess.run([cmd] + args, stdout=f)
+            elif operator == "2>":
+                with open(file, "w") as f:
+                    subprocess.run([cmd] + args, stderr=f)
+
         else:
             subprocess.run([cmd] + args)
     except FileNotFoundError:
