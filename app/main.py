@@ -90,13 +90,13 @@ def handle_builtin(parsed_input):
 
             for arg in args:
                 if arg in builtin_commands:
-                    out_lines.append((STD_OUT, f"{arg} is a shell builtin"))
+                    out_lines.append([STD_OUT, f"{arg} is a shell builtin"])
                 else:
                     executable = find_executable(arg)
                     if executable:
-                        out_lines.append((STD_OUT, f"{arg} is {executable}"))
+                        out_lines.append([STD_OUT, f"{arg} is {executable}"])
                     else:
-                        out_lines.append((STD_ERR, f"{arg}: not found"))
+                        out_lines.append([STD_ERR, f"{arg}: not found"])
             output = list(chain(out_lines)) #maybe use *out_lines, dunno
 
         case "pwd":
