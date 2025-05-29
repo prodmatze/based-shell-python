@@ -1,0 +1,13 @@
+List of files: 
+app
+codecrafters.yml
+out.txt
+Pipfile
+Pipfile.lock
+README.md
+s.txt
+test.txt
+test_err.txt
+tmp.txt
+tt.txt
+your_program.sh
