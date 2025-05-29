@@ -208,18 +208,22 @@ def handle_external(parsed_input):
     cmd = parsed_input["cmd"]
     args = parsed_input["args"]
     redirects = parsed_input["redirects"]
+    redirect_modes = parsed_input.get("redirect_modes", {})
+    
     stdout_file = redirects.get("stdout_file")
     stderr_file = redirects.get("stderr_file")
+    stdout_mode = redirect_modes.get("stdout", "w")
+    stderr_mode = redirect_modes.get("stderr", "w")
 
     try:
         if stdout_file and stderr_file:
-            with open(stdout_file, "w") as out, open(stderr_file, "w") as err:
+            with open(stdout_file, stdout_mode) as out, open(stderr_file, stderr_mode) as err:
                 subprocess.run([cmd] + args, stdout=out, stderr=err)
         elif stdout_file:
-            with open(stdout_file, "w") as out:
+            with open(stdout_file, stdout_mode) as out:
                 subprocess.run([cmd] + args, stdout=out)
         elif stderr_file:
-            with open(stderr_file, "w") as err:
+            with open(stderr_file, stderr_mode) as err:
                 subprocess.run([cmd] + args, stderr=err)
         else:
             subprocess.run([cmd] + args)
