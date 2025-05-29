@@ -27,8 +27,11 @@ def parse_input(user_input):
         return {}
 
     redirects = {}
+    redirect_modes = {
+        "stdout": "w",
+        "stderr": "w"
+    }
     args = []
-    mode = "w"
     i = 0
 
     while i < len(tokens):
@@ -39,7 +42,7 @@ def parse_input(user_input):
             if i + 1 < len(tokens):
                 redirects["stdout_file"] = tokens[i + 1]
                 i += 2
-                mode = "a" if token in [">>", "1>>"] else "w"
+                redirect_modes["stdout"] = "a" if token in [">>", "1>>"] else "w"
                 continue
             else:
                 print("Syntax error: expected filename after stdout redirection")
@@ -50,7 +53,7 @@ def parse_input(user_input):
             if i + 1 < len(tokens):
                 redirects["stderr_file"] = tokens[i + 1]
                 i += 2
-                mode = "a" if token == "2>>" else "w"
+                redirect_modes["stderr"] = "a" if token == "2>>" else "w"
                 continue
             else:
                 print("Syntax error: expected filename after stderr redirection")
@@ -67,7 +70,7 @@ def parse_input(user_input):
         "cmd": args[0],
         "args": args[1:],
         "redirects": redirects,
-        "mode": mode
+        "redirect_modes": redirect_modes
     }
 
 def find_executable(arg):
@@ -83,7 +86,7 @@ def handle_builtin(parsed_input):
     cmd = parsed_input["cmd"]
     args = parsed_input["args"]
     redirects = parsed_input["redirects"]
-    mode = parsed_input.get("mode", "w")
+    redirect_modes = parsed_input.get("redirect_modes", {})
 
     outputs = []
 
@@ -132,17 +135,17 @@ def handle_builtin(parsed_input):
         case "exit":
             sys.exit(0)
 
-    handle_outputs(outputs, redirects, mode)
+    handle_outputs(outputs, redirects, redirect_modes)
 
     return None
 
-def handle_outputs(outputs, redirects, mode):
+def handle_outputs(outputs, redirects, redirect_modes):
     stdout_file = redirects.get("stdout_file")
     stderr_file = redirects.get("stderr_file")
 
     #open files only once, so a single stream doesnt overwrite file contents
-    stdout_handle = open(stdout_file, mode) if stdout_file else None
-    stderr_handle = open(stderr_file, mode) if stderr_file else None
+    stdout_handle = open(stdout_file, redirect_modes.get("stdout", "w")) if stdout_file else None
+    stderr_handle = open(stderr_file, redirect_modes.get("stderr", "w")) if stderr_file else None
 
     seen_stderr = False
 
