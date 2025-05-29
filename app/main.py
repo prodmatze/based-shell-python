@@ -28,26 +28,29 @@ def parse_input(user_input):
 
     redirects = {}
     args = []
+    mode = "w"
     i = 0
 
     while i < len(tokens):
         token = tokens[i]
 
         #stdout redirection
-        if token in [">", "1>"]:
+        if token in [">", "1>", ">>", "1>>"]: 
             if i + 1 < len(tokens):
                 redirects["stdout_file"] = tokens[i + 1]
                 i += 2
+                mode = "a" if token in [">>", "1>>"] else "w"
                 continue
             else:
                 print("Syntax error: expected filename after stdout redirection")
                 return {}
 
         #stderr redirection
-        elif token == "2>":
+        elif token in ["2>", "2>>"]:
             if i + 1 < len(tokens):
                 redirects["stderr_file"] = tokens[i + 1]
                 i += 2
+                mode = "a" if token == "2>>" else "w"
                 continue
             else:
                 print("Syntax error: expected filename after stderr redirection")
@@ -63,7 +66,8 @@ def parse_input(user_input):
     return {
         "cmd": args[0],
         "args": args[1:],
-        "redirects": redirects
+        "redirects": redirects,
+        "mode": mode
     }
 
 def find_executable(arg):
@@ -79,6 +83,7 @@ def handle_builtin(parsed_input):
     cmd = parsed_input["cmd"]
     args = parsed_input["args"]
     redirects = parsed_input["redirects"]
+    mode = parsed_input.get("mode", "w")
 
     outputs = []
 
@@ -126,28 +131,64 @@ def handle_builtin(parsed_input):
                 
         case "exit":
             sys.exit(0)
-    handle_outputs(outputs, redirects)
+
+    handle_outputs(outputs, redirects, mode)
 
     return None
 
-def handle_outputs(outputs, redirects):
-    stdout_file = redirects.get("stdout_file", None)
-    stderr_file = redirects.get("stderr_file", None)
-    for output in outputs:
-        if output[0] == STD_OUT:
-            if stdout_file:
-                handle_redirect(output, stdout_file)
-            else:
-                print(output[1])
-        if output[0] == STD_ERR:
-            if stderr_file:
-                handle_redirect(output, stderr_file)
-            else:
-                print(output[1])
-        if stderr_file and STD_ERR not in (stream for stream, _ in outputs):
-            handle_redirect((ERR_FALLBACK, ""), stderr_file)
+def handle_outputs(outputs, redirects, mode):
+    stdout_file = redirects.get("stdout_file")
+    stderr_file = redirects.get("stderr_file")
 
-    return None
+    #open files only once, so a single stream doesnt overwrite file contents
+    stdout_handle = open(stdout_file, mode) if stdout_file else None
+    stderr_handle = open(stderr_file, mode) if stderr_file else None
+
+    seen_stderr = False
+
+    for stream, msg in outputs:
+        if stream == STD_OUT:
+            if stdout_handle:
+                stdout_handle.write(msg + "\n")
+            else:
+                print(msg)
+
+        elif stream == STD_ERR:
+            seen_stderr = True
+            if stderr_handle:
+                stderr_handle.write(msg + "\n")
+            else:
+                print(msg)
+
+    #fallback for when stderr redirection is requested but no error exists
+    if stderr_file and not seen_stderr:
+        stderr_handle.write("") if stderr_handle else None
+
+    #cleanup/close file handlers
+    if stdout_handle:
+        stdout_handle.close()
+    if stderr_handle:
+        stderr_handle.close()
+
+# def handle_outputs(outputs, redirects):
+#     stdout_file = redirects.get("stdout_file", None)
+#     stderr_file = redirects.get("stderr_file", None)
+#     for stream, msg in outputs:
+#         output = (stream, msg)
+#         if stream == STD_OUT:
+#             if stdout_file:
+#                 handle_redirect(output, stdout_file)
+#             else:
+#                 print(msg)
+#         if stream == STD_ERR:
+#             if stderr_file:
+#                 handle_redirect(output, stderr_file)
+#             else:
+#                 print(msg)
+#     if stderr_file and STD_ERR not in (stream for stream, _ in outputs):
+#         handle_redirect((ERR_FALLBACK, ""), stderr_file)
+#
+#     return None
 
 def handle_redirect(output, out_file):
     stream, msg = output
