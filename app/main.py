@@ -139,16 +139,16 @@ def handle_builtin(parsed_input):
             else:
                 print(output[1])
         if stderr_file and not STD_ERR in list(map(lambda x: x[0], outputs)):
-            handle_redirect((STD_ERR, ""), stderr_file)
+            handle_redirect(("error-fallback", ""), stderr_file)
 
 
 def handle_redirect(output, out_file):
-        if output[0] == STD_OUT and out_file:
+        if output[0] and out_file:
             with open(out_file, "w") as f:
                 f.write(output[1] + "\n")
-        if output[0] == STD_ERR and out_file:
+        if output[0] == "error-fallback" and out_file:
             with open(out_file, "w") as f:
-                f.write(output[1] + "\n")
+                f.write(output[1])
         
 def handle_external(parsed_input):
     cmd = parsed_input["cmd"]
