@@ -18,6 +18,9 @@ STD_OUT = "stdout"
 STD_ERR = "stderr"
 STD_INFO = "stdinfo"
 
+#fallback for when stderr redirection is requested but there is no error
+ERR_FALLBACK = "stderr_fallback"
+
 def parse_input(user_input):
     tokens = shlex.split(user_input)
     if not tokens:
@@ -76,8 +79,6 @@ def handle_builtin(parsed_input):
     cmd = parsed_input["cmd"]
     args = parsed_input["args"]
     redirects = parsed_input["redirects"]
-    stdout_file = redirects.get("stdout_file", None)
-    stderr_file = redirects.get("stderr_file", None)
 
     outputs = []
 
@@ -115,7 +116,7 @@ def handle_builtin(parsed_input):
                 elif os.path.isdir(args[0]):
                     try:
                         os.chdir(args[0])
-                        outputs.append((STD_OUT, ""))
+                        #outputs.append((STD_OUT, ""))
                     except Exception as e:
                         outputs.append((STD_ERR, f"cd: {e}"))
                 else:
@@ -125,8 +126,13 @@ def handle_builtin(parsed_input):
                 
         case "exit":
             sys.exit(0)
+    handle_outputs(outputs, redirects)
 
+    return None
 
+def handle_outputs(outputs, redirects):
+    stdout_file = redirects.get("stdout_file", None)
+    stderr_file = redirects.get("stderr_file", None)
     for output in outputs:
         if output[0] == STD_OUT:
             if stdout_file:
@@ -138,17 +144,21 @@ def handle_builtin(parsed_input):
                 handle_redirect(output, stderr_file)
             else:
                 print(output[1])
-        if stderr_file and not STD_ERR in list(map(lambda x: x[0], outputs)):
-            handle_redirect(("error-fallback", ""), stderr_file)
+        if stderr_file and STD_ERR not in (stream for stream, _ in outputs):
+            handle_redirect((ERR_FALLBACK, ""), stderr_file)
 
+    return None
 
 def handle_redirect(output, out_file):
-        if output[0] and out_file:
-            with open(out_file, "w") as f:
-                f.write(output[1] + "\n")
-        if output[0] == "error-fallback" and out_file:
-            with open(out_file, "w") as f:
-                f.write(output[1])
+    stream, msg = output
+    if stream == ERR_FALLBACK:
+        with open(out_file, "w") as f:
+            f.write(msg)  #no newline
+    else:
+        with open(out_file, "w") as f:
+            f.write(msg + "\n")
+
+    return None
         
 def handle_external(parsed_input):
     cmd = parsed_input["cmd"]
