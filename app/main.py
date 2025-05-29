@@ -126,6 +126,7 @@ def handle_builtin(parsed_input):
         case "exit":
             sys.exit(0)
 
+
     for output in outputs:
         if output[0] == STD_OUT:
             if stdout_file:
@@ -137,6 +138,9 @@ def handle_builtin(parsed_input):
                 handle_redirect(output, stderr_file)
             else:
                 print(output[1])
+        if stderr_file and not STD_ERR in list(map(lambda x: x[0], outputs)):
+            handle_redirect((STD_ERR, ""), stderr_file)
+
 
 def handle_redirect(output, out_file):
         if output[0] == STD_OUT and out_file:
