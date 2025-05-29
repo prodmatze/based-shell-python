@@ -126,20 +126,25 @@ def handle_builtin(parsed_input):
         case "exit":
             sys.exit(0)
 
-    if stdout_file or stderr_file:
-        handle_redirects(outputs, redirects)
-    else:
-        for stream, msg in outputs:
-            print(msg)
+    for output in outputs:
+        if output[0] == STD_OUT:
+            if stdout_file:
+                handle_redirect(output, stdout_file)
+            else:
+                print(output[1])
+        if output[0] == STD_ERR:
+            if stderr_file:
+                handle_redirect(output, stderr_file)
+            else:
+                print(output[1])
 
-def handle_redirects(outputs, redirects):
-    for stream, msg in outputs:
-        if stream == STD_OUT and redirects.get("stdout_file"):
-            with open(redirects["stdout_file"], "w") as f:
-                f.write(msg + "\n")
-        elif stream == STD_ERR and redirects.get("stderr_file"):
-            with open(redirects["stderr_file"], "w") as f:
-                f.write(msg + "\n")
+def handle_redirect(output, out_file):
+        if output[0] == STD_OUT and out_file:
+            with open(out_file, "w") as f:
+                f.write(output[1] + "\n")
+        if output[0] == STD_ERR and out_file:
+            with open(out_file, "w") as f:
+                f.write(output[1] + "\n")
         
 def handle_external(parsed_input):
     cmd = parsed_input["cmd"]
