@@ -11,6 +11,9 @@ builtin_operators = {
     "stderr_ops": ["2>"]
 }
 
+#3 default I/O Streams: stdin, stdout, stderr
+#added std_info for misc prints/debugging
+STD_IN = "stdin"
 STD_OUT = "stdout"
 STD_ERR = "stderr"
 STD_INFO = "stdinfo"
@@ -130,18 +133,13 @@ def handle_builtin(parsed_input):
             print(msg)
 
 def handle_redirects(outputs, redirects):
-    for output in outputs:
-        match output[0]:
-            case "stdout":
-                with open(redirects["stdout_file"], "w") as f:
-                    f.write(output[1] + "\n")
-
-            case "stderr":
-                    with open(redirects["stderr_file"], "w") as f:
-                        if output[1]:
-                            f.write(output[1] + "\n")
-                        else:
-                            f.write("")
+    for stream, msg in outputs:
+        if stream == STD_OUT:
+            with open(redirects["stdout_file"], "w") as f:
+                f.write(msg + "\n")
+        elif stream == STD_ERR:
+            with open(redirects["stderr_file"], "w") as f:
+                f.write(msg + "\n")
 
     return None
         
