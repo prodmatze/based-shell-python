@@ -11,54 +11,54 @@ builtin_operators = {
     "stderr_ops": ["2>"]
 }
 
-STD_OUT = "std_out"
-STD_ERR = "std_err"
-STD_INFO = "std_info"
+STD_OUT = "stdout"
+STD_ERR = "stderr"
+STD_INFO = "stdinfo"
 
 def parse_input(user_input):
     tokens = shlex.split(user_input)
-    
     if not tokens:
         return {}
 
-    result = {
-        "cmd": tokens[0], 
-        "args": [],
-        "redirect": False,
-        "operator": None,
-        "file": None
+    redirects = {}
+    args = []
+    i = 0
+
+    while i < len(tokens):
+        token = tokens[i]
+
+        #stdout redirection
+        if token in [">", "1>"]:
+            if i + 1 < len(tokens):
+                redirects["stdout_file"] = tokens[i + 1]
+                i += 2
+                continue
+            else:
+                print("Syntax error: expected filename after stdout redirection")
+                return {}
+
+        #stderr redirection
+        elif token == "2>":
+            if i + 1 < len(tokens):
+                redirects["stderr_file"] = tokens[i + 1]
+                i += 2
+                continue
+            else:
+                print("Syntax error: expected filename after stderr redirection")
+                return {}
+
+        else:
+            args.append(token)
+            i += 1
+
+    if not args:
+        return {}
+
+    return {
+        "cmd": args[0],
+        "args": args[1:],
+        "redirects": redirects
     }
-
-    if any(op in tokens for op in builtin_operators["stdout_ops"]):
-        if ">" in tokens:
-            index = tokens.index(">")
-        else:
-            index = tokens.index("1>")
-        result["operator"] = "1>"
-        result["redirect"] = True
-
-        result["args"] = tokens[1:index]
-        if index + 1 >= len(tokens):
-            print("Syntax error, no file provided for redirection")
-        else:
-            result["file"] = tokens[index+1]
-
-    elif any(op in tokens for op in builtin_operators["stderr_ops"]):
-        if "2>" in tokens:
-            index = tokens.index("2>")
-        result["operator"] = "2>"
-        result["redirect"] = True
-
-        result["args"] = tokens[1:index]
-        if index + 1 >= len(tokens):
-            print("Syntax error, no file provided for redirection")
-        else:
-            result["file"] = tokens[index+1]
-
-    else:
-        result["args"] = tokens[1:]
-
-    return result
 
 def find_executable(arg):
     paths = os.environ.get("PATH", "").split(":")
@@ -72,104 +72,99 @@ def find_executable(arg):
 def handle_builtin(parsed_input):
     cmd = parsed_input["cmd"]
     args = parsed_input["args"]
-    redirect = parsed_input["redirect"]
-    file = parsed_input["file"]
-    operator = parsed_input.get("operator", None)
-    output = []
+    redirects = parsed_input["redirects"]
+    stdout_file = redirects.get("stdout_file", None)
+    stderr_file = redirects.get("stderr_file", None)
+
+    outputs = []
 
     match cmd:
         case "echo":
-            output = STD_OUT, " ".join(args)
+            outputs.append((STD_OUT, " ".join(args)))
 
         case "type":
-            out_lines = []
-
             if not args:
-                output = STD_ERR, f"{cmd}: missing argument"
+                outputs.append((STD_ERR, f"{cmd}: missing argument"))
 
             for arg in args:
                 if arg in builtin_commands:
-                    out_lines += [STD_OUT, f"{arg} is a shell builtin"]
+                    outputs.append((STD_OUT, f"{arg} is a shell builtin"))
                 else:
                     executable = find_executable(arg)
                     if executable:
-                        out_lines += [STD_OUT, f"{arg} is {executable}"]
+                        outputs.append((STD_OUT, f"{arg} is {executable}"))
                     else:
-                        out_lines += [STD_ERR, f"{arg}: not found"]
-            output = list(chain(out_lines)) #maybe use *out_lines, dunno
+                        outputs.append((STD_ERR, f"{arg}: not found"))
 
         case "pwd":
-            output = STD_OUT, os.getcwd()
+            outputs.append((STD_OUT, os.getcwd()))
 
         case "cd":
             if not args:
-                output = STD_ERR, "cd: missing argument"
+                outputs.append((STD_ERR, "cd: missing argument"))
             elif len(args) == 1:
                 if args[0] == "~":
                     home = os.environ.get("HOME")
                     if home:
                         os.chdir(home)
                     else:
-                        output = STD_INFO, "cd: HOME not set"
+                        outputs.append((STD_INFO, "cd: HOME not set"))
                 elif os.path.isdir(args[0]):
                     try:
                         os.chdir(args[0])
                         output = ""
                     except Exception as e:
-                        output = STD_ERR, f"cd: {e}"
+                        outputs.append((STD_ERR, f"cd: {e}"))
                 else:
-                    output = STD_ERR, f"cd: {args[0]}: No such file or directory"
+                    outputs.append((STD_ERR, f"cd: {args[0]}: No such file or directory"))
             else:
-                output = STD_ERR, f"cd: {' '.join(args)}: Invalid path."
+                outputs.append((STD_ERR, f"cd: {' '.join(args)}: Invalid path."))
                 
         case "exit":
             sys.exit(0)
 
-    if redirect and file:
-        # with open(file, "w") as f:
-        #     f.write(output + "\n")
-        handle_redirect(output, file, operator)
-        if output[0] == STD_OUT and operator == "2>":
-            print(output[1])
-    elif output:
-        print(output[1])
+    if stdout_file or stderr_file:
+        handle_redirects(outputs, redirects)
+    else:
+        for stream, msg in outputs:
+            print(msg)
 
-def handle_redirect(output, file, operator):
-    match operator:
-        case "1>":
-            with open(file, "w") as f:
-                f.write(output[1] + "\n")
-        case "2>":
-                with open(file, "w") as f:
-                    if output[0] == STD_ERR:
-                        f.write(output + "\n")
-                    else:
-                        f.write("")
+def handle_redirects(outputs, redirects):
+    for output in outputs:
+        match output[0]:
+            case "stdout":
+                with open(redirects["stdout_file"], "w") as f:
+                    f.write(output[1] + "\n")
 
+            case "stderr":
+                    with open(redirects["stderr_file"], "w") as f:
+                        if output[1]:
+                            f.write(output[1] + "\n")
+                        else:
+                            f.write("")
 
     return None
-
         
 def handle_external(parsed_input):
     cmd = parsed_input["cmd"]
     args = parsed_input["args"]
-    redirect = parsed_input["redirect"]
-    file = parsed_input["file"]
-    operator = parsed_input.get("operator", None)
+    redirects = parsed_input["redirects"]
+    stdout_file = redirects.get("stdout_file")
+    stderr_file = redirects.get("stderr_file")
 
     try:
-        if redirect:
-            if not file:
-                print(f"Redirection operator used, but no file specified")
-            elif operator == "1>":
-                with open(file, "w") as f:
-                    subprocess.run([cmd] + args, stdout=f)
-            elif operator == "2>":
-                with open(file, "w") as f:
-                    subprocess.run([cmd] + args, stderr=f)
-
+        if stdout_file and stderr_file:
+            with open(stdout_file, "w") as out, open(stderr_file, "w") as err:
+                subprocess.run([cmd] + args, stdout=out, stderr=err)
+        elif stdout_file:
+            with open(stdout_file, "w") as out:
+                subprocess.run([cmd] + args, stdout=out)
+        elif stderr_file:
+            with open(stderr_file, "w") as err:
+                subprocess.run([cmd] + args, stderr=err)
         else:
             subprocess.run([cmd] + args)
+
     except FileNotFoundError:
         print(f"{cmd}: command not found")
         
