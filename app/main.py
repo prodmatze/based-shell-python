@@ -134,16 +134,12 @@ def handle_builtin(parsed_input):
 
 def handle_redirects(outputs, redirects):
     for stream, msg in outputs:
-        if stream == STD_OUT and redirects["stdout_file"]:
+        if stream == STD_OUT and redirects.get("stdout_file"):
             with open(redirects["stdout_file"], "w") as f:
                 f.write(msg + "\n")
-        elif stream == STD_ERR:
-            if redirects["stderr_file"]:
-                with open(redirects["stderr_file"], "w") as f:
-                    f.write(msg + "\n")
-
-
-    return None
+        elif stream == STD_ERR and redirects.get("stderr_file"):
+            with open(redirects["stderr_file"], "w") as f:
+                f.write(msg + "\n")
         
 def handle_external(parsed_input):
     cmd = parsed_input["cmd"]
