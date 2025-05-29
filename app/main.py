@@ -173,37 +173,8 @@ def handle_outputs(outputs, redirects, redirect_modes):
     if stderr_handle:
         stderr_handle.close()
 
-# def handle_outputs(outputs, redirects):
-#     stdout_file = redirects.get("stdout_file", None)
-#     stderr_file = redirects.get("stderr_file", None)
-#     for stream, msg in outputs:
-#         output = (stream, msg)
-#         if stream == STD_OUT:
-#             if stdout_file:
-#                 handle_redirect(output, stdout_file)
-#             else:
-#                 print(msg)
-#         if stream == STD_ERR:
-#             if stderr_file:
-#                 handle_redirect(output, stderr_file)
-#             else:
-#                 print(msg)
-#     if stderr_file and STD_ERR not in (stream for stream, _ in outputs):
-#         handle_redirect((ERR_FALLBACK, ""), stderr_file)
-#
-#     return None
-
-def handle_redirect(output, out_file):
-    stream, msg = output
-    if stream == ERR_FALLBACK:
-        with open(out_file, "w") as f:
-            f.write(msg)  #no newline
-    else:
-        with open(out_file, "w") as f:
-            f.write(msg + "\n")
-
     return None
-        
+
 def handle_external(parsed_input):
     cmd = parsed_input["cmd"]
     args = parsed_input["args"]
