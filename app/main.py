@@ -115,7 +115,7 @@ def handle_builtin(parsed_input):
                 elif os.path.isdir(args[0]):
                     try:
                         os.chdir(args[0])
-                        output = ""
+                        outputs.append((STD_OUT, ""))
                     except Exception as e:
                         outputs.append((STD_ERR, f"cd: {e}"))
                 else:
@@ -134,12 +134,14 @@ def handle_builtin(parsed_input):
 
 def handle_redirects(outputs, redirects):
     for stream, msg in outputs:
-        if stream == STD_OUT:
+        if stream == STD_OUT and redirects["stdout_file"]:
             with open(redirects["stdout_file"], "w") as f:
                 f.write(msg + "\n")
         elif stream == STD_ERR:
-            with open(redirects["stderr_file"], "w") as f:
-                f.write(msg + "\n")
+            if redirects["stderr_file"]:
+                with open(redirects["stderr_file"], "w") as f:
+                    f.write(msg + "\n")
+
 
     return None
         
