@@ -1,4 +1,5 @@
 from os.path import isfile
+import readline
 import sys
 import os
 import subprocess
@@ -201,14 +202,24 @@ def handle_external(parsed_input):
 
     except FileNotFoundError:
         print(f"{cmd}: command not found")
+
+def autocomplete(text, state):
+    matches = [cmd for cmd in builtin_commands if cmd.startswith(text)]
+    #print(f"[DEBUG] autocomplete called with text='{text}', state={state}")
+    if state < len(matches):
+        return matches[state] + " "
+    else:
+        return None
         
 def main():
-    while True:
-        print("$ ", end="", flush=True)
+    readline.set_completer(autocomplete)
+    readline.set_completer_delims(" \t\n")
+    readline.parse_and_bind("bind ^I rl_complete")
 
+    while True:
         #wait for user input
         try:
-            user_input = input().strip()           #strip to avoid errors with extra whitespaces (e.g " echo hello", "echo hello ")
+            user_input = input("$ ")
         except EOFError:                        #CTRL-D (exit shell)
             print("BYE BYE")
             break
@@ -217,10 +228,7 @@ def main():
             continue
 
         parsed_input = parse_input(user_input)
-
-
         cmd = parsed_input.get("cmd", None)
-
         error_msg = f"{cmd}: command not found"
 
         #handle empty input -> continue to next iteration if user just presses enter with no input
