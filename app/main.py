@@ -213,7 +213,6 @@ def autocomplete(text, state):
         
 def main():
     readline.set_completer(autocomplete)
-    readline.set_completer_delims(" \t\n")
     readline.parse_and_bind("bind ^I rl_complete")
 
     while True:
